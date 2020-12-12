@@ -10,7 +10,6 @@ from constants import pi, PRE
 import process
 from tomography import Tomography
 from plot import Plot
-import matplotlib.pyplot as plt
 
 DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 NAME = os.path.basename(DIR)
@@ -27,7 +26,7 @@ def reconstruct(sinogram, filter_=True):
     return image
 
 
-def visualize_data(run_number, p, slice_=True, filter_=True, format_='k'):
+def visualize_data(run_number, slice_=True, filter_=True):
     sinogram, positions, angles = data(run_number)
 
     y_mid = len(positions) // 2
@@ -52,12 +51,12 @@ def visualize_data(run_number, p, slice_=True, filter_=True, format_='k'):
         image_high = process.denoise(image_high, 0.4)
         image_high = rotate(image_high, 5, reshape=False)
 
-        # p = Plot()
-        # p.errbar_shade(positions / PRE.m, sinogram[:, a_mid], sinogram_low[:, a_mid], sinogram_high[:, a_mid], format_=format_)
-        # p.show(xlabel='y (mm)', ylabel='Counts', grid=True, title='Sino')
-        # p = Plot()
-        p.errbar_shade(positions / PRE.m, image[y_mid, :], image_low[y_mid, :], image_high[y_mid, :], format_=format_)
-        # p.show(xlabel='x (mm)', ylabel='Intensity (a.u.)', grid=True, legend=['Value', 'Error Bound'])
+        p = Plot()
+        p.errbar_shade(positions / PRE.m, sinogram[:, a_mid], sinogram_low[:, a_mid], sinogram_high[:, a_mid])
+        p.show(xlabel='y (mm)', ylabel='Counts', grid=True, title='Sino')
+        p = Plot()
+        p.errbar_shade(positions / PRE.m, image[y_mid, :], image_low[y_mid, :], image_high[y_mid, :])
+        p.show(xlabel='x (mm)', ylabel='Intensity (a.u.)', grid=True, legend=['Value', 'Error Bound'])
     else:
         p = Plot()
         p.cmap(sinogram, flip=True, label='Counts', extent=[np.rad2deg(min(angles)), np.rad2deg(max(angles)),
@@ -68,11 +67,11 @@ def visualize_data(run_number, p, slice_=True, filter_=True, format_='k'):
         p.show(xlabel='x (mm)', ylabel='y (mm)')
 
 
-def simulate(source_positions, p, y_limit=(-0.01, 0.01), slice_=True, filter_=True, format_='k', param=None):
+def simulate(source_positions, y_limit=(-0.01, 0.01), slice_=True, filter_=True):
     profile = cv2.imread(str(ASSETS_DIR / 'flat-21.png'), cv2.IMREAD_GRAYSCALE) / 255
     tomo = Tomography()
-    tomo.add_scint([SCINT_X, 0, 0], profile, width=param * PRE.m, height=D_APERTURE)
-    tomo.add_scint([-SCINT_X, 0, 0], profile, width=param * PRE.m, height=D_APERTURE)
+    tomo.add_scint([SCINT_X, 0, 0], profile, width=2 * PRE.m, height=D_APERTURE)
+    tomo.add_scint([-SCINT_X, 0, 0], profile, width=2 * PRE.m, height=D_APERTURE)
     for position in source_positions:
         tomo.add_source([*position, 0], activity=1E5)
 
@@ -82,8 +81,8 @@ def simulate(source_positions, p, y_limit=(-0.01, 0.01), slice_=True, filter_=Tr
 
     y_mid = len(positions) // 2
     a_mid = len(angles) // 2
-    # center_index = process.index_peaks(sinogram[:, 0], distance=y_mid, prominence=0.5)[0]
-    # sinogram = np.roll(sinogram, y_mid - center_index, axis=0)
+    center_index = process.index_peaks(sinogram[:, 0], distance=y_mid, prominence=0.5)[0]
+    sinogram = np.roll(sinogram, y_mid - center_index, axis=0)
     image = reconstruct(sinogram, filter_=filter_)
 
     try:
@@ -103,12 +102,12 @@ def simulate(source_positions, p, y_limit=(-0.01, 0.01), slice_=True, filter_=Tr
         image_low = reconstruct(sinogram_low, filter_=filter_)
         image_high = reconstruct(sinogram_high, filter_=filter_)
 
-        # p = Plot()
-        p.errbar_shade(positions / PRE.m, sinogram[:, a_mid], sinogram_low[:, a_mid], sinogram_high[:, a_mid], format_=format_)
-        # p.show(xlabel='y (mm)', ylabel='Counts', grid=True, title='Sino')
-        # p = Plot()
-        # p.errbar_shade(positions / PRE.m, image[y_mid, :], image_low[y_mid, :], image_high[y_mid, :], format_=format_)
-        # p.show(xlabel='x (mm)', ylabel='Intensity (a.u.)', grid=True)
+        p = Plot()
+        p.errbar_shade(positions / PRE.m, sinogram[:, a_mid], sinogram_low[:, a_mid], sinogram_high[:, a_mid])
+        p.show(xlabel='y (mm)', ylabel='Counts', grid=True, title='Sino')
+        p = Plot()
+        p.errbar_shade(positions / PRE.m, image[y_mid, :], image_low[y_mid, :], image_high[y_mid, :])
+        p.show(xlabel='x (mm)', ylabel='Intensity (a.u.)', grid=True)
     else:
         p = Plot()
         p.cmap(sinogram, flip=True, label='Counts', extent=[np.rad2deg(min(angles)), np.rad2deg(max(angles)),
@@ -116,7 +115,7 @@ def simulate(source_positions, p, y_limit=(-0.01, 0.01), slice_=True, filter_=Tr
         p.show(xlabel='$\\varphi$ (°)', ylabel='y (mm)')
         p = Plot()
         p.cmap(image, flip=True, label='Intensity (a.u.)', extent=[min(positions) / PRE.m, max(positions) / PRE.m] * 2)
-        p.show(xlabel='x (mm)', ylabel='y (mm)')  # title='Reconstructed Image'
+        p.show(xlabel='x (mm)', ylabel='y (mm)', title='Reconstructed Image')
 
 def fit_res():
     p = Plot()
@@ -143,16 +142,11 @@ def fit_res():
 
 
 if __name__ == '__main__':
-    # positions = [[-1.6, 0], [4.2, 0]]  # single source
-    positions = [[0, 0]]
-    # positions = [[-2.1, 0], [-1.6, 0], [-1.1, 0],
-    #              [3.7, 0], [4.2, 0], [4.7, 0]]
+    positions = [[0, 0]]  # single source
     # positions = [[-sep / 2, 0], [sep / 2, 0]]  # double source
     # positions = [[1, 2], [-1, 0], [-1, 1]]  # multi source
 
-    p = Plot()
     # simulate(np.array(positions) * PRE.m, p, y_limit=10 * PRE.m, slice_=True, filter_=True, param=2, format_='k')
     # simulate(np.array(positions) * PRE.m, p, y_limit=10 * PRE.m, slice_=True, filter_=True, param=6, format_='--b')
-    visualize_data(101, p, slice_=True, filter_=True, format_='k')
-    visualize_data(109, p, slice_=True, filter_=True, format_='--b')
-    p.show(xlabel='x (mm)', ylabel='Intensity (a.u.)', grid=True, legend=['Slit width 2mm', 'Slit width 6mm', None, None])
+    visualize_data(101, slice_=True, filter_=True)
+    visualize_data(109, slice_=True, filter_=True)

@@ -7,7 +7,6 @@ import warnings
 # warnings.filterwarnings("ignore")
 
 LINEWIDTH = 1.4
-MARGINS = (0, 0.1)
 POINT = '.'
 PALETTE = 'husl'
 GRID_COLOR = np.array([1, 1, 1]) * 0.85
@@ -21,6 +20,7 @@ DEFAULT_COLOR = 'k'
 DEFAULT_Z_ORDER = 0
 DEFAULT_MARKER_SIZE = 5
 DEFAULT_FIGURE_SIZE = [10, 8]
+DEFAULT_MARGINS = (0, 0.1)
 
 
 class Plot:
@@ -69,7 +69,7 @@ class Plot:
         plt.xticks(x, labels)
         return self
 
-    def show(self, legend=None, xlabel=None, ylabel=None, xrange=None, yrange=None, title=None, grid=False):
+    def show(self, legend=None, xlabel=None, ylabel=None, xrange=None, yrange=None, title=None, margins=DEFAULT_MARGINS, grid=False):
         self._format_legend(legend)
         if legend is not None:
             plt.legend(legend, fontsize=LABEL_FONT_SIZE)
@@ -85,7 +85,7 @@ class Plot:
         plt.yticks(fontsize=TICK_FONT_SIZE)
         plt.title(title, fontsize=TITLE_FONT_SIZE)
         plt.gcf().canvas.set_window_title(_window_title())
-        plt.margins(*MARGINS)
+        plt.margins(*margins)
         plt.tight_layout()
         plt.show()
 

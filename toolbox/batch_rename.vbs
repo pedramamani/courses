@@ -1,17 +1,25 @@
-PATTERN = "Simplified Robot - "
-REPLACEMENT = ""
-DIRECTORY = ".\"
+PATTERN = "some"
+REPL = "another"
+DIR = ".\"
+EXT = "xxx"
 
 
-Set objFso = CreateObject("Scripting.FileSystemObject")
-Set Folder = objFSO.GetFolder(DIRECTORY)
+set fileSystem = createObject("scripting.fileSystemObject")
+set folder = fileSystem.getFolder(DIR)
+index = 0
 
-For Each File In Folder.Files
-    sNewFile = File.Name
-    sNewFile = Replace(sNewFile, PATTERN, REPLACEMENT)
+for each file in folder.files
+	segments = split(file.name, ".")
+	extension = segments(uBound(segments))
+    newName = replace(file.name, PATTERN, REPL)
 
-    if (sNewFile<>File.Name) then
-
-        File.Move(File.ParentFolder + "\" + sNewFile)
+    if (extension = EXT) then
+    	newName = cStr(index) & "." & extension
+    	index = index + 1
     end if
-Next
+    
+
+    if (newName <> file.name) then
+        file.move(file.parentFolder & "\" & newName)
+    end if
+next
