@@ -1,5 +1,5 @@
-from process import *
-from plot import Plot
+from myprocess import *
+from myplot import Plot
 
 
 if __name__ == '__main__':
@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     f = fit_func(Function.line, x, y, sigma)
     x_vals = [0, 2, 4]
-    y_vals, y_errors = f(x_vals, x_errors=[0.1, 0.2, 0.3])
+    y_vals, y_errors = f(x_vals)
 
     p = Plot()
     p.errbar(x, y, sigma, format_='.r').errbar(x_vals, y_vals, y_errors, format_='.--b')

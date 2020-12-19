@@ -1,19 +1,20 @@
-# import scipy.optimize as optimize
 from scipy import optimize, signal
 import numpy as np
 
-DEFAULT_FILTER_ORDER = 2
-DEFAULT_PEAK_PROM = 0.1
-DEFAULT_PEAK_DISTANCE = 10
-DEFAULT_EDGE_PROM = 0.8
+DENOISE_FILTER_ORDER = 2
+DENOISE_FACTOR = 0.1
+PEAK_PROMINENCE = 0.1
+PEAK_DISTANCE = 10
+EDGE_PROMINENCE = 0.8
 DEFAULT_MAXFEV = 10000
-DEFAULT_BINS = 20
-DEFAULT_RELATIVE_STEP = 1E-8
-DEFAULT_ABSOLUTE_STEP = 1E-8
+BIN_COUNT = 20
+CENTROID_COUNT = 5
+ERROR_RELATIVE_STEP = 1E-8
+ERROR_ABSOLUTE_STEP = 1E-8
 
 
-def hist2d(x, y, bins=DEFAULT_BINS):
-    return np.histogram2d(x, y, bins=bins)
+def hist2d(x, y, bin_count=BIN_COUNT):
+    return np.histogram2d(x, y, bins=bin_count)
 
 
 def trim_zeros(x):
@@ -26,22 +27,31 @@ def trim_zeros(x):
     return x[start: end], start, end
 
 
-def denoise(y, factor, order=DEFAULT_FILTER_ORDER):
+def denoise(y, factor=DENOISE_FACTOR, order=DENOISE_FILTER_ORDER):
     params = signal.butter(order, factor, btype='lowpass')
     y = signal.filtfilt(*params, y)
     return y
 
 
-def index_peaks(y, distance=DEFAULT_PEAK_DISTANCE, prominence=DEFAULT_PEAK_PROM):
+def index_peaks(y, distance=PEAK_DISTANCE, prominence=PEAK_PROMINENCE):
     prominence *= np.max(y) - np.min(y)
     indices, _ = signal.find_peaks(y, distance=distance, prominence=(prominence, None))
     return indices
 
 
-def index_edges(y, prominence=DEFAULT_EDGE_PROM):
+def index_edges(y, prominence=EDGE_PROMINENCE):
     prominence *= np.max(y) - np.min(y)
     indices = np.where(abs(y[:-1] - y[1:]) >= prominence)[0] + 1
     return indices
+
+
+def centroid(x, peak_index, count=CENTROID_COUNT):
+    n = (count - 1) // 2
+    start, end = peak_index - n, peak_index + n
+    x0 = np.average(x[start: end])
+    dx = np.average(x[start + 1: end + 1] - x[start: end])
+    sigma = (dx / 2) / np.sqrt(count)
+    return x0, sigma
 
 
 def fit(f, x, y, sigma, absolute_sigma=True, guess=None):
@@ -52,7 +62,7 @@ def fit(f, x, y, sigma, absolute_sigma=True, guess=None):
     return params, errors, chi2
 
 
-def fit_func(f, x, y, sigma, absolute_sigma=True, relative_step=DEFAULT_RELATIVE_STEP, absolute_step=DEFAULT_ABSOLUTE_STEP):
+def fit_func(f, x, y, sigma, absolute_sigma=True, relative_step=ERROR_RELATIVE_STEP, absolute_step=ERROR_ABSOLUTE_STEP):
     params, errors, _ = fit(f, x, y, sigma, absolute_sigma=absolute_sigma)
 
     def func(x_vals, sigma=None):
@@ -98,7 +108,7 @@ class Function:
         return h / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2)) + y0
 
     @staticmethod
-    def decay(x, A, a, y0):
+    def exp_decay(x, A, a, y0):
         x = np.array(x)
         return A * np.exp(-a * x) + y0
 

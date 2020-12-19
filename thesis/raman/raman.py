@@ -1,8 +1,8 @@
 import pathlib
 import os
-import extract
-import process
-import plot
+import myextract
+import myprocess
+import myplot
 from constants import PRE, c, h
 import numpy as np
 
@@ -21,15 +21,15 @@ BOUNDS = [9, 30]
 
 class Raman:
     def __init__(self, file, control_file):
-        wl, I = extract.extract(ASSETS_DIR / file)
-        _, I_ctrl = extract.extract(ASSETS_DIR / control_file)
+        wl, I = myextract.extract(ASSETS_DIR / file)
+        _, I_ctrl = myextract.extract(ASSETS_DIR / control_file)
 
         i = np.argmin(np.abs(wl - PROBE_WL / PRE.n))
         self.wl = wl[i:] * PRE.n
         self.I = I[i:]
         self.I_ctrl = I_ctrl[i:]
 
-        self.divs = self._unify_list(process.index_peaks(-self.I_ctrl, prominence=PEAK_PROM, distance=PEAK_DIST))
+        self.divs = self._unify_list(myprocess.index_peaks(-self.I_ctrl, prominence=PEAK_PROM, distance=PEAK_DIST))
         self.pops = self._calc_pops(self.I)
         self.pops_ctrl = self._calc_pops(self.I_ctrl)
         self.ratios = self._calc_ratios(self.pops)
@@ -39,23 +39,23 @@ class Raman:
         # wl_transitions = (1 / E_hc) / PRE.n
 
     def plot_raw(self):
-        p = plot.Plot()
+        p = myplot.Plot()
         p.line(self.wl / PRE.n, self.I_ctrl)
         p.line(self.wl / PRE.n, self.I)
-        p.errbar(self.wl[self.divs] / PRE.n, np.zeros_like(self.divs), 100, format_='.k', markersize=0, zorder=10)
-        p.errbar(self.wl[self.divs][BOUNDS] / PRE.n, np.zeros_like(BOUNDS), 200, format_='.r', markersize=0, zorder=10)
+        p.errbar(self.wl[self.divs] / PRE.n, np.zeros_like(self.divs), 100, format_='.k', marker_size=0, z_order=10)
+        p.errbar(self.wl[self.divs][BOUNDS] / PRE.n, np.zeros_like(BOUNDS), 200, format_='.r', marker_size=0, z_order=10)
         p.show(xlabel='Wavelength (nm)', ylabel='Intensity (a.u.)', legend=['Control', 'Pierced', 'Dividers'])
 
     def plot_pops(self):
         width = 0.4 * (self.fcfg[self.divs[1]] - self.fcfg[self.divs[0]]) / PRE.T
-        p = plot.Plot()
+        p = myplot.Plot()
         p.bar(self.fcfg[self.divs] / PRE.T - width / 2, self.pops_ctrl, width=width)
         p.bar(self.fcfg[self.divs] / PRE.T + width / 2, self.pops, width=width)
         p.show(xlabel='CFG Frequency (THz)', ylabel='Population (a.u.)', legend=['Control', 'Pierced'])
 
     def plot_ratios(self):
         width = 0.4
-        p = plot.Plot()
+        p = myplot.Plot()
         p.bar(np.arange(3) - width / 2, self.ratios_ctrl, width=width)
         p.bar(np.arange(3) + width / 2, self.ratios, width=width)
         p.xticks(np.arange(3), ['Thermal', 'Lost', 'Super'])

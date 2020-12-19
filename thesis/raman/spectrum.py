@@ -1,8 +1,8 @@
 import pathlib
 import os
-import extract
-import process
-import plot
+import myextract
+import myprocess
+import myplot
 from constants import PRE, c
 import numpy as np
 
@@ -16,15 +16,15 @@ CENTER_WL = 790 * PRE.n
 
 class Spectrum:
     def __init__(self, file, control_file):
-        wl, I = extract.extract(ASSETS_DIR / file)
-        _, I_ctrl = extract.extract(ASSETS_DIR / control_file)
+        wl, I = myextract.extract(ASSETS_DIR / file)
+        _, I_ctrl = myextract.extract(ASSETS_DIR / control_file)
 
-        self.I_ctrl, start, end = process.trim_zeros(I_ctrl)
+        self.I_ctrl, start, end = myprocess.trim_zeros(I_ctrl)
         self.I = I[start: end]
         self.wl = wl[start: end] * PRE.n
 
         i = np.argmin(np.abs(self.wl - CENTER_WL))
-        i_peak = process.index_peaks(self.I, distance=len(self.wl))[0]
+        i_peak = myprocess.index_peaks(self.I, distance=len(self.wl))[0]
         if i_peak < i:
             indices = np.arange(i, -1, -1)
         else:
@@ -34,13 +34,13 @@ class Spectrum:
         self.params = self._calc_notch_params()  # w, h, m, x0
 
     def plot_raw(self):
-        p = plot.Plot()
+        p = myplot.Plot()
         p.line(self.wl / PRE.n, self.I_ctrl)
         p.line(self.wl / PRE.n, self.I)
         p.show(xlabel='Wavelength (nm)', ylabel='Intensity (a.u.)', legend=['Control', 'Pierced'])
 
     def plot_norm(self):
-        p = plot.Plot()
+        p = myplot.Plot()
         p.line(self.fcfg / PRE.T, self.norm)
         p.line(self.fcfg / PRE.T, self._notch(self.fcfg / PRE.T, *self.params))
         p.show(xlabel='CFG Frequency (THz)', ylabel='Normalized Intensity (0-1)', legend=['Data', 'Fit'])
@@ -65,7 +65,7 @@ class Spectrum:
         i = (i_right + i_left) // 2
         width = (self.fcfg[i_right] - self.fcfg[i_left]) / PRE.T
         guess = np.array([width, self.norm[i], 1, self.fcfg[i] / PRE.T])
-        params, errors, r2 = process.fit(self._notch, self.fcfg / PRE.T, self.norm, np.full_like(self.fcfg, ERROR_NORM), guess=guess)
+        params, errors, r2 = myprocess.fit(self._notch, self.fcfg / PRE.T, self.norm, np.full_like(self.fcfg, ERROR_NORM), guess=guess)
         return params
 
     @staticmethod

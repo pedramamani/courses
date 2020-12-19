@@ -75,22 +75,20 @@ def cubic_interpolation(points):
     plt.show()
 
 
-
-
 if __name__ == '__main__':
     pts = np.array([  # increasing
-        [0, 0],
-        [1, -1],
-        [2, 1],
-        [3, 0],
-        [4, 2],
-        [5, -1]
+        [-0.4, -0.5],
+        [-0.2, 0.4],
+        [0.2, 0.8],
+        [0.6, 0.2]
     ])
-    vector_matrix_values()
+    # vector_matrix_values()
     # vandermonde_interpolation(pts)
     # lagrange_interpolation(pts)
-    cubic_interpolation(pts)
+    # cubic_interpolation(pts)
 
+    A = np.vander(pts[:, 0], increasing=True)
+    print(A)
 
 
 

@@ -1,4 +1,4 @@
-from toolbox import extract
+from toolbox import myextract
 from data_config import *
 
 
@@ -25,8 +25,8 @@ class DataSet:
         return self._ch2
 
     def _extract(self):
-        self._time, self._ch1 = extract.extract(self._ch1_filepath, xcol=TIME_COLUMN, ycol=VOLTAGE_COLUMN)
-        _, self._ch2 = extract.extract(self._ch2_filepath, xcol=TIME_COLUMN, ycol=VOLTAGE_COLUMN)
+        self._time, self._ch1 = myextract.extract(self._ch1_filepath, xcol=TIME_COLUMN, ycol=VOLTAGE_COLUMN)
+        _, self._ch2 = myextract.extract(self._ch2_filepath, xcol=TIME_COLUMN, ycol=VOLTAGE_COLUMN)
 
 
 class LinearSet(DataSet):

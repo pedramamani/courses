@@ -86,4 +86,4 @@ if __name__ == '__main__':
     fCFG = CFG(chirp_rate=0.31, f_fwhm=29, x_fwhm=10, theta_in=44, grating_density=1500, grating_distance=30,
                focal_length=20, tag='f')
     sCFG.specs()
-    fCFG.notch(-4.6, 0.2)  # -4.6, 0.2 AND -5, 1.6
+    sCFG.notch(6, 0.6)  # -4.6, 0.2 AND -5, 1.6

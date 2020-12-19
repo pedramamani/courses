@@ -1,6 +1,6 @@
 import numpy as np
 from constants import pi, PRE
-from plot import Plot
+from myplot import Plot
 
 ALPHA_LEN, BETA_LEN = 2 ** 14 + 1, 2 ** 2 + 1  # 12, 1
 ALPHA_MAX, BETA_MAX = np.deg2rad(45), np.deg2rad(80)  # 60, 60

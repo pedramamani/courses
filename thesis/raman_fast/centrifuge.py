@@ -1,6 +1,6 @@
-from extract import extract
-from process import denoise
-from plot import Plot
+from myextract import extract
+from myprocess import denoise
+from myplot import Plot
 import numpy as np
 import matplotlib.pyplot as plt
 
